@@ -2,7 +2,8 @@ const { Client, Events, GatewayIntentBits } = require("discord.js");
 const { joinVoiceChannel } = require("@discordjs/voice");
 require("dotenv").config();
 
-const wait = require("cdreyer-utilities");
+const joinCall = require("./src/joinCall");
+const summarize = require("./src/summarize");
 
 const TOKEN = process.env.BOT_TOKEN;
 
@@ -18,21 +19,23 @@ const client = new Client({
 
 client.on(Events.ClientReady, (client) => {
     console.log(`LOGGED IN AS ${client.user.tag}`);
-
-    const guild = client.guilds.cache.get("1063252691037454377")
-    const channel = guild.channels.cache.find(channel => channel.name == "Geral");
-    joinVoiceChannel({
-        channelId: channel.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
-        selfDeaf: false,
-        selfMute: false
-    })    
-    1063252691624669197
 })
 
 client.on(Events.MessageCreate, async (message) => {
-    
+    if (message.author.id == client.user.id) return;
+
+    const content = message.content;
+
+    if (!content) return
+
+    message.reply("summarizing text, please wait...")
+    summarize(content)
+        .then(res => {
+            message.reply(res);
+        })
+        .catch(err => {
+            message.reply(err)
+        })
 })
 
 
