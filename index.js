@@ -3,8 +3,7 @@ const { REST } = require("@discordjs/rest");
 require("dotenv").config();
 
 const joinCall = require("./src/joinCall");
-const summarize = require("./src/summarize");
-const { run } = require("./src/slashCommands/summarizeTextCommand");
+const summarizeCommand = require("./src/slashCommands/summarizeTextCommand");
 
 const TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -19,7 +18,6 @@ const client = new Client({
     ]
 });
 
-const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 client.on(Events.ClientReady, (client) => {
     console.log(`LOGGED IN AS ${client.user.tag}`);
@@ -29,42 +27,40 @@ client.on(Events.MessageCreate, async (message) => {
     if (message.author.id == client.user.id) return;
 
     const content = message.content;
-
+    
     if (!content) return
-
-    message.reply("summarizing text, please wait...")
-    summarize(content)
-        .then(res => {
-            message.reply(res);
-        })
-        .catch(err => {
-            message.reply(err)
-        })
+    
+    
 })
 
 
 client.on(Events.InteractionCreate, async (interaction) => {
-    console.log("interaction again");
+    if (!interaction.isChatInputCommand()) return;
+    
+    if (interaction.commandName === 'summarize-text') {
+        summarizeCommand.run(interaction);
+    }
 })
 
-async function registerCommands() {
 
-    const commands = [
-        {
-            name: 'summarize-text',
-            description: 'summrize a text in the input field'
-        }
-    ];
+const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-    try {
-        await rest.put(Routes.applicationGuildCommands(CLIENT_ID, "1063252691037454377"), {
-            body: commands,
-        });
-        console.log("commands registered");
-    } catch (err) {
-        console.log("ERROR: ", err)
-    }
-}
-registerCommands();
+// async function registerCommands() {
+//     const commands = [{
+//         name: summarizeCommand.command.name,
+//         description: summarizeCommand.command.description,
+//         options: summarizeCommand.rawData.options
+//     }];
+
+//     try {
+//         await rest.put(Routes.applicationGuildCommands(CLIENT_ID, "1063252691037454377"), {
+//             body: commands,
+//         });
+//         console.log("commands registered");
+//     } catch (err) {
+//         console.log("ERROR: ", err)
+//     }
+// }
+// registerCommands();
 
 client.login(TOKEN)
